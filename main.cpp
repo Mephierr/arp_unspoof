@@ -2,11 +2,12 @@
 #include <cstdlib>
 #include <string>
 #include <sstream>
-#include <map>
+#include <unordered_map>
 #include <array>
 
-std::map<std::string, std::string> trustedDevices = {
-    {"192.168.1.2", "00:1A:2B:3C:4D:5E"}, // Доверенные IP и MAC
+// Доверенные IP и MAC
+std::unordered_map<std::string, std::string> trustedDevices = {
+    {"192.168.1.2", "00:1A:2B:3C:4D:5E"},
     {"192.168.1.3", "00:1A:2B:3C:4D:5F"}
 };
 
@@ -21,12 +22,13 @@ void checkArpTable() {
         return;
     }
 
+ // Доверенные IP и MAC
     while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
         result += buffer.data();
     }
     pclose(pipe);
-
-    // Вывод ARP-таблицы
+    
+    //Вывод ARP таблицы
     std::cout << "ARP таблица:\n" << result << std::endl;
 
     // Анализ ARP-таблицы
@@ -34,9 +36,9 @@ void checkArpTable() {
     std::string line;
     while (std::getline(ss, line)) {
         std::istringstream iss(line);
-        std::string ip, hwType, flags, hwAddr, mask, device;
+        std::string ip, hwAddr;
 
-        if (iss >> ip >> hwType >> flags >> hwAddr >> mask >> device) {
+        if (iss >> ip >> std::ws && (iss >> hwAddr)) { // Считываем только IP и MAC
             // Проверка против доверенного списка
             if (trustedDevices.count(ip) && trustedDevices[ip] != hwAddr) {
                 std::cout << "Подозрительная запись: IP=" << ip 
